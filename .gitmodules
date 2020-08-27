@@ -1,0 +1,6 @@
+[submodule "3p/DeclarativeWidgets"]
+	path = 3p/DeclarativeWidgets
+	url = https://github.com/KDAB/DeclarativeWidgets
+[submodule "3p/qmetaobject-rs"]
+    path = 3p/qmetaobject-rs
+	url = https://github.com/knownunown/qmetaobject-rs

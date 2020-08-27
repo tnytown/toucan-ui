@@ -5,7 +5,16 @@ authors = ["Andrew Pan <known@unown.me>"]
 edition = "2018"
 
 [dependencies]
-vgtk = "0.2"
-serde = "^1.0"
 serde_yaml = "0.8"
 pretty_env_logger = "0.4"
+cstr = "0.2.1"
+lazy_static = "1.4.0"
+anyhow = "1.0.32"
+# qmetaobject = "0.1.4"
+
+[dependencies.qmetaobject]
+path = "3p/qmetaobject-rs/qmetaobject"
+
+[dependencies.serde]
+version = "^1.0"
+features = ["derive"]

@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::{collections::BTreeMap, fs::File, io, path::Path};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -6,17 +6,22 @@ pub struct PacketSet {
     pub packets: Vec<Packet>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct Packet {
     pub name: String,
-    pub description: String,
     pub id: u16,
+    pub description: String,
     pub data: Vec<Field>,
 }
 
-impl Packet {
-    pub fn id(p: Packet) -> Packet {
-        p
+impl std::fmt::Debug for Packet {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Packet")
+            .field("name", &self.name)
+            .field("description", &self.description)
+            .field("id", &self.id)
+            .field("data", &self.data)
+            .finish()
     }
 }
 
@@ -34,13 +39,19 @@ pub enum Field {
         #[serde(rename = "type")]
         typ: String,
         #[serde(default)]
+        #[serde(deserialize_with = "de_null_string")]
         units: String,
     },
 }
 
+fn de_null_string<'de, D: Deserializer<'de>>(d: D) -> Result<String, D::Error> {
+    let r: Option<String> = Deserialize::deserialize(d)?;
+    Ok(r.unwrap_or(String::new()))
+}
+
 impl Default for Field {
     fn default() -> Self {
-        todo!()
+        unimplemented!()
     }
 }
 
@@ -79,10 +90,12 @@ impl From<serde_yaml::Error> for ModelError {
     }
 }
 
+use anyhow::{Context, Result};
+use io::Read;
 // backing file, data, needs update
 #[derive(Debug)]
 pub struct Model(pub Vec<(File, PacketSet, bool)>);
-type Result<T> = std::result::Result<T, ModelError>;
+//type Result<T> = std::result::Result<T, ModelError>;
 
 impl Model {
     pub fn new() -> Self {
@@ -97,22 +110,33 @@ impl Model {
     }
 
     pub fn add_backing(&mut self, path: &Path) -> Result<()> {
-        let file = File::open(path)?;
-        let pkl: PacketSet = serde_yaml::from_reader(&file)?;
+        println!("mdl on {:?}", path);
+        let mut file = File::open(path)?;
+        let mut data = Vec::new();
+        file.read_to_end(&mut data)?;
+
+        // slice out utf-8 BOM
+        let sl = if data.len() > 2 && data[0] == 0xef && data[1] == 0xbb && data[2] == 0xbf {
+            &data[3..]
+        } else {
+            &data
+        };
+        let pkl: PacketSet = serde_yaml::from_slice(sl)
+            .with_context(|| format!("failed to parse {}", path.display()))?;
 
         self.0.push((file, pkl, false));
 
         Ok(())
     }
 
-    pub fn persist(&mut self) -> Result<()> {
-        for doc in &mut self.0 {
+    pub fn persist(&self) -> Result<()> {
+        for doc in &self.0 {
             if !doc.2 {
-                continue;
+                //continue;
             }
 
             serde_yaml::to_writer(&doc.0, &doc.1)?;
-            doc.2 = false;
+            //doc.2 = false;
             break;
         }
 
