@@ -38,7 +38,7 @@ jobs:
     - name: DeclarativeWidgets build
       run: |
         mkdir widgets_build && cd widgets_build
-        qmake ..\3p\DeclarativeWidgets/declarativewidgets.pro
+        qmake ..\3p\DeclarativeWidgets\declarativewidgets.pro
         nmake
     - name: cargo build
       uses: actions-rs/cargo@v1
