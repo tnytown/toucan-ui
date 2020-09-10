@@ -33,7 +33,7 @@ jobs:
       run: |
         qmake ../3p/DeclarativeWidgets/declarativewidgets.pro
         make
-      working_directory: widgets_build
+      working-directory: widgets_build
     - name: cargo build
       uses: actions-rs/cargo@v1
       with:
