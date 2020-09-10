@@ -69,8 +69,8 @@ impl Default for PacketListModel {
     }
 }
 
-qrc!(init_rscs, "app/qml" {
-   "root.qml", "prelude.js"
+qrc!(init_rscs, "app" {
+    "qml/root.qml", "qml/prelude.js"
 });
 
 fn main() {
