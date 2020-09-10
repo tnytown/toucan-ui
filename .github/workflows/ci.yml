@@ -19,7 +19,7 @@ jobs:
           - os: windows-latest
             deploy_tool: windeployqt
             target_name: toucan-ui.exe
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: ilammy/msvc-dev-cmd@v1
@@ -70,10 +70,10 @@ jobs:
         --qmlimport widgets_build/qml/
         target/debug/${{ matrix.target_name }}
     - name: Package release (Windows)
-      if: ${{ runner.os == "Windows" }}
+      if: matrix.os == "windows-latest"
       run: Compress-Archive -Path out/ -DestinationPath toucan-ui.zip
     - name: Package release (Unix)
-      if: {{ runner.os != "Windows" }}
+      if: matrix.os != "windows-latest"
       run: zip -r out toucan-ui.zip
     - uses: "marvinpinto/action-automatic-releases@v1.1.0"
       with:
