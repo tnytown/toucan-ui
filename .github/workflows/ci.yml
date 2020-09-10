@@ -46,7 +46,9 @@ jobs:
       shell: bash
       run: |
         mkdir widgets_build
+        pushd 3p/DeclarativeWidgets
         echo "::set-output name=hash::$(git rev-parse HEAD)"
+        popd
     - name: Cache DeclarativeWidgets build
       id: cache-dw
       uses: actions/cache@v1
