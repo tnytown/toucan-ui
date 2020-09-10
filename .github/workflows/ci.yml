@@ -1,0 +1,48 @@
+name: CI build
+
+on:
+  push:
+    branches: [ master ]
+  # TODO(aptny): how are secrets handled for forks/pulls?
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Install Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v2
+      with:
+        version: "5.12.9"
+    - name: DeclarativeWidgets build
+      run: ./build_widgets.sh
+      shell: bash
+    - name: cargo build
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+    - name: QT deploy
+      run: windeployqt --dir out/ --qmldir frontend/qml/ --qmlimport widgets_build/qml/ target/debug/toucan-ui.exe
+    - name: Package release
+      run: zip -r out toucan-ui.zip
+      shell: bash
+    - uses: "marvinpinto/action-automatic-releases@v1.1.0"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
+        prerelease: true
+        files: toucan-ui.zip
+    
