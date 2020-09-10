@@ -20,18 +20,7 @@ struct AppState {
     model: model::Model,
     engine: Option<QmlEngine>,
     base: qt_base_class!(trait QObject),
-    yeet: qt_method!(
-        fn yeet(&mut self) -> QJSValue {
-            self.engine.as_mut().map_or(false.into(), |e| {
-                e.new_qobject::<WtfType>(WtfType {
-                    value: 42,
-                    ..Default::default()
-                })
-            })
-        }
-    ),
     open_directory: qt_method!(fn(&self, path: QString) -> QJSValue),
-    //nth_field_model: qt_method!(fn(&self, set: usize, n: usize) -> QJSValue),
 }
 
 impl AppState {
@@ -57,15 +46,6 @@ impl AppState {
             __pather_data: RefCell::new(vec![0]),
         })
     }
-
-    /*fn nth_field_model(&mut self, set: usize, n: usize) -> QJSValue {
-        println!("Got {} {} from JS", set, n);
-        self.js_expose(FieldListModel {
-            packet: self.model.sets[set].packets[n].clone(),
-            base: Default::default(),
-            __pather_data: RefCell::new(vec![0]),
-        })
-    }*/
 }
 
 #[derive(QObject, TreeModel)]
@@ -74,7 +54,6 @@ struct PacketListModel {
     list: model::Model,
 
     base: qt_base_class!(trait QAbstractItemModel),
-    //on_clicked: qt_method!(fn(&self, idx: QModelIndex)),
     __pather_data: RefCell<Vec<i32>>,
 }
 
@@ -117,10 +96,4 @@ fn main() {
     app.borrow_mut().engine = Some(engine);
 
     app.borrow().engine.as_ref().unwrap().exec(); // TODO(aptny): why does the borrow here work?
-}
-
-#[cfg(test)]
-mod test {
-    #[test]
-    fn test() {}
 }
