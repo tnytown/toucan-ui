@@ -25,15 +25,22 @@ jobs:
       with:
         toolchain: nightly
         override: true
+    - name: Cache Qt
+      id: cache-qt
+      uses: actions/cache@v1
+      with:
+        path: ../Qt
+        key: ${{ runner.os }}-qt
     - name: Install Qt
       uses: jurplel/install-qt-action@v2
       with:
+        cache: ${{ steps.cache-qt.outputs.cache-hit }}
         version: "5.12.9"
     - name: DeclarativeWidgets build
       run: |
+        mkdir widgets_build && cd widgets_build
         qmake ../3p/DeclarativeWidgets/declarativewidgets.pro
         make
-      working-directory: widgets_build
     - name: cargo build
       uses: actions-rs/cargo@v1
       with:
