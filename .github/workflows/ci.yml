@@ -15,6 +15,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
+    - uses: ilammy/msvc-dev-cmd@v1
     - uses: actions/checkout@v2
       with:
         submodules: true
@@ -35,13 +36,11 @@ jobs:
         cached: ${{ steps.cache-qt.outputs.cache-hit }}
         version: "5.12.9"
     - name: DeclarativeWidgets build
-      uses: ilammy/msvc-dev-cmd@v1
       run: |
         mkdir widgets_build && cd widgets_build
         qmake ../3p/DeclarativeWidgets/declarativewidgets.pro
         make
     - name: cargo build
-      uses: ilammy/msvc-dev-cmd@v1
       uses: actions-rs/cargo@v1
       with:
         command: build
