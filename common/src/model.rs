@@ -1,16 +1,30 @@
+use model_macro::TreeNode;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::{collections::BTreeMap, fs::File, io, path::Path};
 
-#[derive(Debug, Serialize, Deserialize)]
+extern crate self as _common;
+
+#[derive(Debug, Serialize, Deserialize, TreeNode)]
+#[tm(item = "Packet")]
 pub struct PacketSet {
+    #[serde(skip)]
+    pub name: String,
+    #[serde(skip)]
+    #[tm(skip)]
+    pub file: Option<File>,
+
+    #[tm(children)]
     pub packets: Vec<Packet>,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, TreeNode)]
+#[tm(item = "Field")]
 pub struct Packet {
     pub name: String,
     pub id: u16,
     pub description: String,
+
+    #[tm(children)]
     pub data: Vec<Field>,
 }
 
@@ -25,13 +39,21 @@ impl std::fmt::Debug for Packet {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TreeNode)]
 #[serde(untagged)]
+#[tm(item = "BitFieldItem")]
 pub enum Field {
     // NB: serde tries to deser enums in order, so Bits should be first b/c it can be a superset of
     // Plain.
     Bits {
         name: String,
+        #[serde(skip)]
+        #[tm(skip)]
+        typ: String,
+        #[serde(skip)]
+        #[tm(skip)]
+        units: String,
+        #[tm(children)]
         bits: Vec<BitFieldItem>,
     },
     Plain {
@@ -55,12 +77,14 @@ impl Default for Field {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, TreeNode)]
+#[tm(item = "()")]
 pub struct BitFieldItem {
     pub name: String,
     #[serde(default = "default_bitnum")]
     pub bitnum: u8,
     #[serde(default)]
+    #[tm(skip)]
     pub values: BTreeMap<u8, String>, // TODO(aptny): check value bounds, fixed size array
 }
 
@@ -90,16 +114,26 @@ impl From<serde_yaml::Error> for ModelError {
     }
 }
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use io::Read;
-// backing file, data, needs update
-#[derive(Debug)]
-pub struct Model(pub Vec<(File, PacketSet, bool)>);
-//type Result<T> = std::result::Result<T, ModelError>;
+
+#[derive(Debug, TreeNode)]
+#[tm(item = "PacketSet")]
+#[tm(columns("Name", "Type", "Units"))]
+pub struct Model {
+    #[tm(children)]
+    pub sets: Vec<PacketSet>,
+}
+
+impl Default for Model {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Model {
     pub fn new() -> Self {
-        Self(Vec::new())
+        Model { sets: Vec::new() }
     }
 
     pub fn new_with_backing(path: &Path) -> Result<Self> {
@@ -121,37 +155,37 @@ impl Model {
         } else {
             &data
         };
-        let pkl: PacketSet = serde_yaml::from_slice(sl)
+        let mut pkl: PacketSet = serde_yaml::from_slice(sl)
             .with_context(|| format!("failed to parse {}", path.display()))?;
-
-        self.0.push((file, pkl, false));
+        pkl.name = path.file_stem().unwrap().to_string_lossy().into(); // asdfjkl
+        pkl.file = Some(file);
+        self.sets.push(pkl);
 
         Ok(())
     }
 
     pub fn persist(&self) -> Result<()> {
-        for doc in &self.0 {
-            if !doc.2 {
-                //continue;
-            }
-
-            serde_yaml::to_writer(&doc.0, &doc.1)?;
-            //doc.2 = false;
-            break;
+        for doc in &self.sets {
+            serde_yaml::to_writer(
+                doc.file
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("file {}.yaml doesn't exist", doc.name))?,
+                &doc.packets,
+            )?;
         }
 
         Ok(())
     }
 }
 
-// TODO(aptny): test for correctness or remove
+// TODO(aptny): test on whole set
 #[cfg(test)]
 mod tests {
     use super::{Packet, PacketSet};
 
     #[test]
     fn test_de() {
-        let r = include_str!("../data/switchboard.yaml");
+        let r = include_str!("../../data/switchboard.yaml");
         let pks: PacketSet = serde_yaml::from_str(r).unwrap();
         println!("{:?}", pks);
     }

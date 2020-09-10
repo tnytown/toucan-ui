@@ -1,0 +1,24 @@
+[package]
+name = "common"
+version = "0.1.0"
+build = "build.rs"
+authors = ["Andrew Pan <known@unown.me>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+qmetaobject = { path = "../3p/qmetaobject-rs/qmetaobject/" }
+model_macro = { path = "../model_macro/" }
+serde_yaml = "0.8"
+anyhow = "1.0.32"
+cpp = "0.5.5"
+enum-primitive-derive = "0.2.1"
+num-traits = "0.2.12"
+
+[dependencies.serde]
+version = "^1.0"
+features = ["derive"]
+
+[build-dependencies]
+cpp_build = "0.5.5"

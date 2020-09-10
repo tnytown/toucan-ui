@@ -1,0 +1,14 @@
+[package]
+name = "model_macro"
+version = "0.1.0"
+authors = ["Andrew Pan <known@unown.me>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+darling = "0.10.2"
+syn = "1.0.39"
+quote = "1.0.7"
+proc-macro2 = "1.0.19"
