@@ -12,6 +12,13 @@ env:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        os: [windows-latest]
+        include:
+          - os: windows-latest
+            deploy_tool: windeployqt
+            target_name: toucan-ui.exe
     runs-on: windows-latest
 
     steps:
@@ -29,15 +36,27 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ../Qt
-        key: ${{ runner.os }}-qt
+        key: qt-${{ runner.os }}
     - name: Install Qt
       uses: jurplel/install-qt-action@v2
       with:
         cached: ${{ steps.cache-qt.outputs.cache-hit }}
         version: "5.15.0"
-    - name: DeclarativeWidgets build
+    - id: dw-rev
+      shell: bash
       run: |
-        mkdir widgets_build && cd widgets_build
+        mkdir widgets_build
+        echo "::set-output name=hash::$(git rev-parse HEAD)"
+    - name: Cache DeclarativeWidgets build
+      id: cache-dw
+      uses: actions/cache@v1
+      with:
+        path: widgets_build
+        key: dw-${{ runner.os }}-${{ steps.dw-rev.outputs.hash }}
+    - name: DeclarativeWidgets build
+      if: ${{ !steps.cache-dw.outputs.cache-hit }}
+      working-directory: widgets_build
+      run: |
         qmake ..\3p\DeclarativeWidgets\declarativewidgets.pro
         nmake
     - name: cargo build
@@ -45,10 +64,17 @@ jobs:
       with:
         command: build
     - name: QT deploy
-      run: windeployqt --dir out/ --qmldir frontend/qml/ --qmlimport widgets_build/qml/ target/debug/toucan-ui.exe
-    - name: Package release
+      run: >
+        ${{ matrix.deploy_tool }} --dir out/
+        --qmldir frontend/qml/
+        --qmlimport widgets_build/qml/
+        target/debug/${{ matrix.target_name }}
+    - name: Package release (Windows)
+      if: ${{ runner.os == "Windows" }}
+      run: Compress-Archive -Path out/ -DestinationPath toucan-ui.zip
+    - name: Package release (Unix)
+      if: {{ runner.os != "Windows" }}
       run: zip -r out toucan-ui.zip
-      shell: bash
     - uses: "marvinpinto/action-automatic-releases@v1.1.0"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
