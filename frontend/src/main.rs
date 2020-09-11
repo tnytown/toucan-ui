@@ -1,5 +1,6 @@
 //#![feature(trace_macros)]
 //trace_macros!(true);
+#![windows_subsystem = "windows"]
 
 use cstr::cstr;
 use qmetaobject::*;
