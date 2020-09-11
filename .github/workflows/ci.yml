@@ -67,13 +67,15 @@ jobs:
         command: build
     - name: QT deploy
       run: >
-        ${{ matrix.deploy_tool }} --dir out/
+        mkdir toucan-ui/ && cp target/debug/${{ matrix.target_name }} toucan-ui/
+        
+        ${{ matrix.deploy_tool }}
         --qmldir frontend/qml/
         --qmlimport widgets_build/qml/
-        target/debug/${{ matrix.target_name }}
+        toucan-ui/${{ matrix.target_name }}
     - name: Package release (Windows)
       if: matrix.os == 'windows-latest'
-      run: Compress-Archive -Path out/ -DestinationPath toucan-ui.zip
+      run: Compress-Archive -Path toucan-ui/ -DestinationPath toucan-ui.zip
     - name: Package release (Unix)
       if: matrix.os != 'windows-latest'
       run: zip -r out toucan-ui.zip
