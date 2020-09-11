@@ -33,10 +33,10 @@ jobs:
         override: true
     - name: Cache Qt
       id: cache-qt
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: ../Qt
-        key: qt-${{ runner.os }}
+        key: qt-${{ matrix.os }}
     - name: Install Qt
       uses: jurplel/install-qt-action@v2
       with:
@@ -51,10 +51,10 @@ jobs:
         popd
     - name: Cache DeclarativeWidgets build
       id: cache-dw
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: widgets_build
-        key: dw-${{ runner.os }}-${{ steps.dw-rev.outputs.hash }}
+        key: dw-${{ matrix.os }}-${{ steps.dw-rev.outputs.hash }}
     - name: DeclarativeWidgets build
       if: ${{ !steps.cache-dw.outputs.cache-hit }}
       working-directory: widgets_build
