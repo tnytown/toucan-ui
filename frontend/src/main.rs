@@ -18,7 +18,7 @@ struct WtfType {
 
 #[derive(QObject, Default)]
 struct AppState {
-    model: model::Model,
+    _model: model::Model,
     engine: Option<QmlEngine>,
     base: qt_base_class!(trait QObject),
     open_directory: qt_method!(fn(&self, path: QString) -> QJSValue),
@@ -33,14 +33,14 @@ impl AppState {
 
     fn open_directory(&mut self, path: QString) -> QJSValue {
         let mut model = model::Model::new();
-        let err: Result<(), anyhow::Error> = fs::read_dir::<String>(path.clone().into())
+        let _err: Result<(), anyhow::Error> = fs::read_dir::<String>(path.clone().into())
             .unwrap()
             .map(|x| x.unwrap())
             .filter(|x| x.file_type().unwrap().is_file())
             .filter(|x| !x.file_name().to_str().unwrap().contains("ignore"))
             .map(|x| model.add_backing(&x.path()))
             .collect();
-        err.unwrap(); // TODO(aptny): Qt Error/Result type bridging
+        //err.unwrap(); // TODO(aptny): Qt Error/Result type bridging
         self.js_expose(PacketListModel {
             list: model,
             base: Default::default(),
