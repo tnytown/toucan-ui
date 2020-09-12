@@ -93,27 +93,6 @@ fn default_bitnum() -> u8 {
     1
 }
 
-// creatively named error type
-#[derive(Debug)]
-pub enum ModelError {
-    Io(io::Error),
-    Deser(serde_yaml::Error),
-}
-
-impl From<io::Error> for ModelError {
-    #[inline]
-    fn from(err: io::Error) -> ModelError {
-        ModelError::Io(err)
-    }
-}
-
-impl From<serde_yaml::Error> for ModelError {
-    #[inline]
-    fn from(err: serde_yaml::Error) -> ModelError {
-        ModelError::Deser(err)
-    }
-}
-
 use anyhow::{anyhow, Context, Result};
 use io::Read;
 
@@ -144,7 +123,6 @@ impl Model {
     }
 
     pub fn add_backing(&mut self, path: &Path) -> Result<()> {
-        println!("mdl on {:?}", path);
         let mut file = File::open(path)?;
         let mut data = Vec::new();
         file.read_to_end(&mut data)?;

@@ -2,19 +2,11 @@
 //trace_macros!(true);
 #![windows_subsystem = "windows"]
 
-//use cstr::cstr;
 use qmetaobject::*;
 use std::{cell::RefCell, fs};
 
 use common::model;
 use common::{JSExposeExt, TreeModel};
-//mod model;
-
-#[derive(Default, QObject)]
-struct WtfType {
-    base: qt_base_class!(trait QObject),
-    value: qt_property!(i32),
-}
 
 #[derive(QObject, Default)]
 struct AppState {
@@ -52,18 +44,6 @@ struct PacketListModel {
 
     base: qt_base_class!(trait QAbstractItemModel),
     __pather_data: RefCell<Vec<i32>>,
-}
-
-impl Clone for PacketListModel {
-    fn clone(&self) -> Self {
-        todo!()
-    }
-}
-
-impl Default for PacketListModel {
-    fn default() -> Self {
-        todo!()
-    }
 }
 
 qrc!(init_rscs, "app" {

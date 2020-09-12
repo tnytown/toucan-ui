@@ -1,7 +1,7 @@
 #![feature(proc_macro_diagnostic)]
 extern crate proc_macro;
 
-use darling::{ast, util, FromDeriveInput, FromField, FromMeta, FromVariant};
+use darling::{ast, FromDeriveInput, FromField, FromMeta, FromVariant};
 use proc_macro2::TokenStream;
 use quote::quote;
 use spanned::Spanned;
@@ -77,13 +77,6 @@ impl FromMeta for ColumnList {
     }
 }
 
-/*
-    fn children(&mut self) -> Option<&mut Vec<T>>;
-    fn columns(&self) -> &[&'static str];
-    fn data(&self, idx: i32) -> QVariant;
-    fn set_data(&mut self, idx: i32, data: QVariant) -> bool;
-*/
-
 #[proc_macro_derive(TreeNode, attributes(tm))]
 pub fn derive_tree_node(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -143,14 +136,6 @@ pub fn derive_tree_node(input: proc_macro::TokenStream) -> proc_macro::TokenStre
         let is_mut = if is_mut { quote!(mut) } else { quote!() };
         match &node.data {
             ast::Data::Enum(e) => {
-                // Vec<TreeNodeVariant>?
-                for v in e {
-                    let target = v.fields.iter().find(|x| x.children);
-                    if let None = target {
-                        continue;
-                    }
-                }
-
                 let mut iter = e
                     .iter()
                     .map(|v| (v, v.fields.iter().find(|x| x.children)))
@@ -348,10 +333,8 @@ pub fn derive_tree_model(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     };
 
     let root_expr = quote! {(&self.#root_ident as &dyn common::TreeNode)};
-    let root_expr_mut = quote! {(&mut self.#root_ident as &mut dyn common::TreeNode)};
 
     let im = quote!((self as &dyn qmetaobject::QAbstractItemModel));
-    let label_role = quote!((common::ItemDataRole::UserRole as i32 + 1));
     let model_impl = quote! {
         impl #g_impl qmetaobject::QAbstractItemModel for #ident #g_ty #g_where {
             fn index(&self, r: i32, c: i32, parent: qmetaobject::QModelIndex) -> qmetaobject::QModelIndex {
@@ -496,8 +479,6 @@ fn impl_tree_pather(
                 let mut v = #dt_mut;
                 v.extend_from_slice(&orig);
 
-                //println!("__pather_extend(id={}, x={}) = {} (new len = {}, path = {:?})",
-                //id, x, ptr, orig[0], orig[1..].to_vec());
                 Some(ptr)
             }
 
@@ -505,9 +486,7 @@ fn impl_tree_pather(
             fn __pather_parent(&self, id: usize) -> std::option::Option<(usize, i32)> {
                 let v = #dt;
 
-                //println!("__pather_parent(id={})", id);
                 // TODO(aptny): maybe fast-path for previous allocation given current length - 1
-                // TODO(aptny): windows should be yielded in reverse order
                 if let Some(n) = v.get(id) {
                     //println!("__pather_parent: n={}", n);
                     if *n >= 0 { return None; } // wtf?

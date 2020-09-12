@@ -1,4 +1,6 @@
 use enum_primitive_derive::Primitive;
+
+#[allow(unused_imports)]
 use num_traits;
 
 use qmetaobject::QVariant;
@@ -85,7 +87,7 @@ impl TreeNode for () {
         unimplemented!()
     }
 
-    fn field(&self, idx: i32) -> QVariant {
+    fn field(&self, _idx: i32) -> QVariant {
         unimplemented!()
     }
 
