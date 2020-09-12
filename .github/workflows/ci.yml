@@ -29,8 +29,7 @@ jobs:
     - name: Install Rust toolchain
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly
-        override: true
+        profile: minimal
     - name: Cache Qt
       id: cache-qt
       uses: actions/cache@v2
