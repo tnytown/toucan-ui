@@ -11,11 +11,14 @@ MainWindow {
 	visible: true
 	windowTitle: qsTr("toucan-ui")
 
+	function wrapReject(promise) {
+		promise.catch((e) => MessageBox.critical(qsTr("Error"), e));
+	}
+	
 	function debug_open_directory() {
-		const DEBUG_DIR = "/Users/apan/dev/svp/toucan/toucan-ui/data";
-		
-	    for(; !packetList.model; packetList.model = app.open_directory(DEBUG_DIR));
+		const DEBUG_DIR = "/Users/apan/dev/svp/toucan/toucan-ui/dataf";
 
+		for(; !packetList.model; packetList.model = app.open_directory(DEBUG_DIR));
 		// TODO(aptny): expose column hiding as macro attr
 		for(let x of [1, 2]) {
 			packetList.hideColumn(x);
@@ -24,7 +27,7 @@ MainWindow {
 		statusBar.showMessage("Ready.");
 	}
 	
-	Component.onCompleted: Z.delay(0).then(debug_open_directory)
+	Component.onCompleted: wrapReject(Z.delay(0).then(debug_open_directory))
 
 	MenuBar {
 		Menu {

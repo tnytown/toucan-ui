@@ -2,12 +2,12 @@
 //trace_macros!(true);
 #![windows_subsystem = "windows"]
 
-use cstr::cstr;
+//use cstr::cstr;
 use qmetaobject::*;
 use std::{cell::RefCell, fs};
 
 use common::model;
-use common::TreeModel;
+use common::{JSExposeExt, TreeModel};
 //mod model;
 
 #[derive(Default, QObject)]
@@ -25,27 +25,23 @@ struct AppState {
 }
 
 impl AppState {
-    fn js_expose<T: QObject>(&mut self, obj: T) -> QJSValue {
-        self.engine
-            .as_mut()
-            .map_or(false.into(), |e| e.new_qobject(obj))
-    }
-
     fn open_directory(&mut self, path: QString) -> QJSValue {
         let mut model = model::Model::new();
-        let _err: Result<(), anyhow::Error> = fs::read_dir::<String>(path.clone().into())
-            .unwrap()
-            .map(|x| x.unwrap())
-            .filter(|x| x.file_type().unwrap().is_file())
-            .filter(|x| !x.file_name().to_str().unwrap().contains("ignore"))
-            .map(|x| model.add_backing(&x.path()))
-            .collect();
-        //err.unwrap(); // TODO(aptny): Qt Error/Result type bridging
-        self.js_expose(PacketListModel {
+        let res: Result<(), anyhow::Error> = fs::read_dir::<String>(path.clone().into())
+            .map_err(|e| e.into())
+            .and_then(|dir| {
+                dir.map(|x| x.unwrap())
+                    .filter(|x| x.file_type().unwrap().is_file())
+                    .filter(|x| !x.file_name().to_str().unwrap().contains("ignore"))
+                    .map(|x| model.add_backing(&x.path()))
+                    .collect()
+            });
+        let res = res.map(|_| PacketListModel {
             list: model,
             base: Default::default(),
             __pather_data: RefCell::new(vec![0]),
-        })
+        });
+        self.engine.js_map_or_throw(res)
     }
 }
 
@@ -88,12 +84,7 @@ fn main() {
     common::qthax::register_types();
     init_rscs();
 
-    engine.add_import_path(
-        format!("{}/qml", std::env::current_dir().unwrap().to_string_lossy()).into(),
-    );
-
     engine.load_file("qrc:/app/qml/root.qml".into());
-    println!("{}/qml", std::env::current_dir().unwrap().to_string_lossy());
     app.borrow_mut().engine = Some(engine);
 
     app.borrow().engine.as_ref().unwrap().exec(); // TODO(aptny): why does the borrow here work?

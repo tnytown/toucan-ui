@@ -1,5 +1,3 @@
-//import QtQml 2.15
-
 function delay(interval) {
 	return new Promise((ok, err) => {
 		try {

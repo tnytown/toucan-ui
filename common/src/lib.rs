@@ -5,6 +5,8 @@ use qmetaobject::QVariant;
 pub mod model;
 pub mod qthax;
 
+pub use qthax::JSExposeExt;
+
 pub use model_macro::TreeModel;
 pub use model_macro::TreeNode;
 
