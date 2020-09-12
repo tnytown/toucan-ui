@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
+        qt: [5.15.0]
         include:
           - os: windows-latest
             deploy_tool: windeployqt
@@ -32,15 +33,15 @@ jobs:
         profile: minimal
     - name: Cache Qt
       id: cache-qt
-      uses: actions/cache@v2
+      uses: actions/cache@v1
       with:
         path: ../Qt
-        key: qt-${{ matrix.os }}
+        key: qt-${{ matrix.os }}-${{ matrix.qt }}
     - name: Install Qt
       uses: jurplel/install-qt-action@v2
       with:
         cached: ${{ steps.cache-qt.outputs.cache-hit }}
-        version: "5.15.0"
+        version: ${{ matrix.qt }}
     - id: dw-rev
       shell: bash
       run: |
