@@ -56,7 +56,7 @@ jobs:
         path: widgets_build
         key: dw-${{ matrix.os }}-${{ steps.dw-rev.outputs.hash }}
     - name: DeclarativeWidgets build
-      if: !steps.cache-dw.outputs.cache-hit
+      if: ${{ !steps.cache-dw.outputs.cache-hit }}
       working-directory: widgets_build
       run: |
         qmake ..\3p\DeclarativeWidgets\declarativewidgets.pro
