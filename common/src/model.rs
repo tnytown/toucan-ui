@@ -161,10 +161,10 @@ impl Model {
 mod tests {
     use super::{Packet, PacketSet};
 
-    #[test]
+    /*#[test]
     fn test_de() {
         let r = include_str!("../../data/switchboard.yaml");
         let pks: PacketSet = serde_yaml::from_str(r).unwrap();
         println!("{:?}", pks);
-    }
+    }*/
 }
